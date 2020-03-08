@@ -3,13 +3,14 @@
 ###################################################
     .data
 ################# Test Big Ints ###################
+compressTest: .word 4 0 0 0 3                     # for compress test
 number0: .word 1 8                                # 8, first digit is the n
 number1: .word 2 6 4                              # 64
 number2: .word 3 1 2 3                            # 123
 ################# Print messages ##################
 newline: .asciiz "\n"
-msg:  .asciiz "Function: main called \n"
-msg1: .asciiz "Function: Is_small_prime_test  called\n"
+msg:  .asciiz "Small Prime Tests"
+msg1: .asciiz "Compress Test"
 msg2: .asciiz "Function: print called\n"
 msg3: .asciiz "Success!"
 ###################################################
@@ -18,30 +19,58 @@ msg3: .asciiz "Success!"
     .text
 ##################### Main ########################
 main:
-# print main message function
-    la $a0, msg
-    li $v0, 4
-    syscall
-   # li $v0, 100
-   # li $a0, 81
-   # jal is_small_prime                          # got to is_small_prime
-   # move $a0, $v0                               # store the result
-   # li $v0, 1
-   # syscall
-    li $a0, 5
+    li $a0, 1
     jal digit_to_big
     move $a0, $v0
     jal print_big
-    li $v0, 10
-    syscall
+
+    b end_program
+    jal small_prime_test_run                    # run the small prime tests
+    #jal digit_to_big
+    #li  $a0, 3923
+    #jal print_big
+    end_program:
+        li $v0, 10
+        syscall
+    print_message:
+        li $v0, 4
+        syscall
+        la $a0, newline
+        li $v0, 4
+        syscall
+        jr $ra
+    print_int:
+        li $v0, 1
+        syscall
+        la $a0, newline
+        li $v0, 4
+        syscall
+        jr $ra
+    small_prime_test_run:
+        la $a0, msg                                 # load "Small Prime Tests"
+        jal print_message                           # see print message
+        li $a0, 7                                   # load 7 for small prime test
+        jal is_small_prime                          # run the code
+        move $a0, $v0
+        jal print_int
+        li $a0, 81                                  # load 81 for small prime test
+        jal is_small_prime                          # run the code
+        move $a0, $v0
+        jal print_int
+        li $a0, 127                                 # load 127 for small prime test
+        jal is_small_prime                          # run the code
+        move $a0, $v0
+        jal print_int
+        b end_program
+
 ################### is_small_prime ###############
 is_small_prime:
     sub $t0, $a0, 1                             # $t0 = p ($a0) -1
     li $t1, 2                                   # Create an i starting at 2 in $t1
     move $t2, $a0                               # $t2 = p
-    la $a0, msg1                                # load print message
-    li $v0, 4                                   # print instruction call
-    syscall                                     # Call the system call 4, to print
+#    la $a0, msg1                                # load print message
+ #   li $v0, 4                                   # print instruction call
+ #   syscall                                     # Call the system call 4, to print
     is_small_prime.loop:
         blt $t0, $t1, is_small_prime.break_loop # modulo p ($a0) % i (
         div $t2, $t1                            # result in a different register
@@ -55,6 +84,7 @@ is_small_prime:
     is_small_prime.end_false:                   # then it's a prime
         li $v0, 0                               # return 0
         jr $ra
+
 ################### print_big ###################
 print_big:
      move $t0, $a0                              # get the input b to $t0, need $a0 for syscalls
@@ -78,24 +108,43 @@ print_big:
         li $v0, 4                               # print string syscall
         syscall                                 # call syscall
         jr $ra                                  # exit the function
+
 ############### digit_to_big ####################
 digit_to_big:
     move $t0, $a0                               # move from the argument to $t0 to store
     li $a0, 1404                                # 4 bites for n, then 350 * 4 =  4 + 1400
     li $v0, 9                                   # Allocation system call
-    syscall                                     # Syscall 9, to allocate
+    syscall                                     # Syscall 9, to allocate an address
     move $t1, $v0                               # 1404 bytes for b placed on heap, move to $t1
     li $t2, 1                                   # using to set n as 1
-    sw $t1, 0($t2)                              # b.n =1
-    addi $t1, 4                                 # increment to digits[0] index by adding 4 bytes
-    sw $t1, 0($t0)                              # digits[0] = a
-    addi $t1, -4                                # move back to beginning of Bigint b
+    sw $t2, 0($t1)                              # b.n = 1
+    sw $t0, 4($t1)                              # digits[0] = int a (came in as input)
     move $v0, $t1                               # Put address into the return parameter
     jr $ra                                      # exit
 
 ############### compare_big ####################
 compare_big:
+    move $t0, $a0                              # address of a = $t0
+    move $t1, $a1                              # address of b = $t1
+    lw   $t2, 0($t0)                           # a.n = $t2
+    lw   $t3, 0($t1)                           # b.n = $t2
+    blt  $t2, $t3, compare_big.return_neg      # ? a.n < b.n : -1
+    blt  $t3, $t2, compare_big.return_pos      # ? b.n < a.n : 1
+    move $t4, $t2                              # $t4 = i = a.n/$t2
+    addi $t4, -1                               # i = a.n - 1
+    compare_big.loop:
+        bltz $t4, compare_big.return_z         # if i < 0, end the loop
 
+        b compare_big.loop
+    compare_big.return_z:
+        li $v0, 0
+        jr $ra
+    compare_big.return_neg:
+        li $v0, -1
+        jr $ra
+    compare_big.return_pos:
+        li $v0, 1
+        jr $ra
 ############### shift_right ####################
 shift_right:
 
