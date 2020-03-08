@@ -132,13 +132,24 @@ compare_big:
     blt  $t3, $t2, compare_big.return_pos      # ? b.n < a.n : 1
     move $t4, $t2                              # $t4 = i = a.n/$t2
     addi $t4, -1                               # i = a.n - 1
+    li   $t5, 4                                # need to get the byte offset
+    mul  $t2, $t2, $t5                         # $t2 =  4 * a.n
+    add  $t2, $t0                              # go to the end of a digits array
+    mul  $t3, $t3, $t5                         # $t3 =  4 * b.n
+    add  $t3, $t1                              # go to the end of b digits array
     compare_big.loop:
         bltz $t4, compare_big.return_z         # if i < 0, end the loop
-
-        b compare_big.loop
+        lw $t6, ($t2)                          # load a digit to $t6
+        lw $t7, ($t3)                          # load b digit to $t7
+        bgt  $t6, $t7, compare_big.return_neg  # a.digits[i] > b.digits[i]
+        blt  $t6, $t7, compare_big.return_pos  # a.digits[i] < b.digits[i]
+        addi $t2, -4                           # move to next digit in a digits array
+        addi $t3, -4                           # move to next digit in b digits array
+        addi $t4, -1                           # i--
+        b compare_big.loop                     # go to top of loop
     compare_big.return_z:
-        li $v0, 0
-        jr $ra
+        li $v0, 0                              # break on loop condition
+        jr $ra                                 # return 0
     compare_big.return_neg:
         li $v0, -1
         jr $ra
