@@ -102,6 +102,11 @@ main:
         jal compare_big
         move $a0, $v0
         jal print_int
+     mult_test:
+        jal init_big_int
+
+
+        jal exit_big_int
         b end_program
 
 ################### is_small_prime ###############
@@ -272,10 +277,17 @@ init_big_int:
         add $t2, 1
         b init_big_int.loop
 
-
     init_big_ing.return:
         move $v0, $sp
         jr $ra
+
+
+exit_big_int:
+    addu $sp, $sp, 1404
+    jr $ra
+
+copy_big_init:
+    # to do for pow_big
 
 
 ############### mult_big #####################
@@ -307,6 +319,30 @@ mult_big:
         mult_big.loopTwo:
             beg $s7, $t9, mult_big.loopTwoExit
 
+            move $t0, $s2                  # start of b
+            add $t0, 4                     # move to the b.digits[]
+            mul $t0, $s5, 4                # i * 4
+            add $t0, $t0, $t1              # b.digits[i]
+            lw $t3, ($t0)
+
+            move $t0, $s1                  # start of a
+            add $t0, 4                     # move to the a.digits[]
+            move $t1, $s7                  # j
+            sub $t1, $t1, $s5              # j - i
+            mul $t2, $t1, 4                # (j-1) * 4
+            add $t0, $t0, $t2              # a.digits[j-i]
+            lw $t4, ($t0)
+
+            mul $t5, $t3, $t4              # b.digits[i] * a.digits[j-1]
+
+            move $t0, $s0                  # start of c
+            add $t0, 4                     # move to the c.digitis[]
+            mul $t1, $s7, 4                # j * 4
+            add $t0, $t0, $t1              # c.digits[j]
+            lw $t6, ($t0)
+
+            add $t6, $t6, $t5              # c.digits[j] + b.digits[i] * a.digits[j-1]
+
 
         mult_big.loopTwoExit:
 
@@ -327,11 +363,10 @@ mult_big:
     lw $s, 32($sp)
 
     subu $sp, $sp, 36                          # remove the stack frame
+                                               # Do not have to worry about return with init_big_int
 
 
 #pow_big:
-
-#sub_big:
 
 #sub_big:
 
