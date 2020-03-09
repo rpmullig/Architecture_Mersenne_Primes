@@ -193,11 +193,8 @@ void shift_right(Bigint * a )
 	for( int i = a->n; i > 0; i-- ){
 		a->digits[i] = a->digits[i-1];
     }
-	// Set lowest digit to 0
-	a->digits[0] = 0;
-
-	// Set to new larger size
-	a->n += 1;
+	a->digits[0] = 0; // Set lowest digit to 0
+	a->n += 1; // Set to new larger size
 }
 
 // Divides by 10
@@ -205,14 +202,10 @@ void shift_right(Bigint * a )
 // we only need to shift our integer array to the left once.
 void shift_left(Bigint * a )
 {
-
     for(int i = 0; i < a->n -1; i++){
         a->digits[i] = a->digits[i+1];
     }
-    a->n -= 1;
-
-    // then compress
-    compress(a);
+    a->n -= 1; // subtract 1 from n due to leftward ship
 }
 
 // Computes c = a % b
