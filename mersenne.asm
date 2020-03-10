@@ -331,7 +331,7 @@ mult_big:
             sub $t1, $t1, $s5              # j - i
             mul $t2, $t1, 4                # (j-1) * 4
             add $t0, $t0, $t2              # a.digits[j-i]
-            lw $t4, ($t0)
+            lw $t4, ($t0)                  #
 
             mul $t5, $t3, $t4              # b.digits[i] * a.digits[j-1]
 
@@ -342,13 +342,23 @@ mult_big:
             lw $t6, ($t0)
 
             add $t6, $t6, $t5              # c.digits[j] + b.digits[i] * a.digits[j-1]
+            add $t6, $t6, $s5              # + carry
 
-
+            li $t8, 10
+            div $s6, $t6, $t8              # val / 10
+            mfhi $t7
+            sw $t7, 0($t0)                   # c.digits[j] = val % 10
+            add $s7, 1                      # j++
+            b mult_big.loopTwo              # restart loop
         mult_big.loopTwoExit:
+            beg $s6, 0, mult_big.loopOneExit
+
+            add $t0, $t0, 4                 # j++
+
 
         b mult_big.loopOne                     #
 
-        mult_big.loopOneExit:
+    mult_big.loopOneExit:
 
 
 
@@ -364,7 +374,7 @@ mult_big:
 
     subu $sp, $sp, 36                          # remove the stack frame
                                                # Do not have to worry about return with init_big_int
-
+    jr $ra
 
 #pow_big:
 
