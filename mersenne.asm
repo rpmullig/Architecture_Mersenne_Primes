@@ -285,6 +285,7 @@ compare_big:
     compare_big.return_pos:
         li $v0, 1
         jr $ra
+
 ################ compress ######################
 compress:
      move $t0, $a0                             # load address from argument
@@ -467,12 +468,20 @@ mult_big:
         jr $ra                                     # Do not have to worry about return with init_big_int
 
 
-#pow_big:
+############### pow_big #####################
+pow_big:
 
+
+
+############### sub_big #####################
 #sub_big:
 
 
+############### mod_big #####################
 #mod_big:
+
+
+############### LLT #####################
 #LLT:
 
 
