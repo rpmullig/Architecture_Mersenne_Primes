@@ -3,18 +3,66 @@
 ###################################################
     .data
 ################# Test Big Ints ###################
-number5: .word 4 0 0 0 7 
-compressTest: .word 4 3 0 0 0 
-number4: .word 1 3 
-compare1a: .word 2 4 2 
-compare1b: .word 2 3 0 
-compare2a: .word 2 3 0 
-compare2b: .word 2 4 2 
-compare3a: .word 2 4 2 
-compare3b: .word 2 4 2 
-number0: .word 1 8 
-number1: .word 3 6 4 4 
-number2: .word 3 1 2 3 
+number5: .word 4 0 0 0 7
+buffer0: .byte 1404
+
+compressTest: .word 4 3 0 0 0
+buffer1: .byte 1404
+
+number4: .word 1 3
+buffer2: .byte 1404
+
+compare1a: .word 2 2 4
+buffer3: .byte 1404
+
+compare1b: .word 2 0 3
+buffer4: .byte 1404
+
+compare2a: .word 2 0 3
+buffer5: .byte 1404
+
+compare2b: .word 2 2 4
+buffer6: .byte 1404
+
+compare3a: .word 2 2 4
+buffer8: .byte 1404
+
+compare3b: .word 2 2 4
+buffer9: .byte 1404
+
+number0: .word 1 8
+buffer10: .byte 1404
+
+number1: .word 3 6 4 4
+buffer11: .byte 1404
+
+number2: .word 3 1 2 3
+buffer13: .byte 1404
+
+number3: .word 1 2
+buffer14: .byte 1404
+
+number6: .word 1 7
+buffer15: .byte 1404
+
+
+number7: .word 1 3
+buffer16: .byte 1404
+
+number11: .word 2 0 3
+buffer17: .byte 1404
+
+number12: .word 2 2 4
+buffer18: .byte 1404
+
+number8: .word 2 2 4
+buffer19: .byte 1404
+
+number9: .word 8 0 0 0 0 0 0 0 1
+buffer20: .byte 1404
+
+number10: .word 7 0 0 0 0 0 0 9
+buffer21: .byte 1404
 ################# Print messages ##################
 newline: .asciiz "\n"
 msg:  .asciiz "Small Prime Tests"
@@ -22,6 +70,8 @@ msg1: .asciiz "Compare Tests"
 msg2: .asciiz "Compress Test"
 msg3: .asciiz "Shift Right Test"
 msg4: .asciiz "Shift Left Test"
+msg5: .asciiz "Multiplication Test"
+debug_msg: .asciiz "Debug\n"
 ###################################################
 #        -----------TEXT-----------               #
 ###################################################
@@ -75,6 +125,8 @@ main:
         jal print_message
         la $a0, number4
         jal shift_right
+        jal shift_right
+        jal shift_right
         la $a0, number4
         jal print_big
     shift_left_test:
@@ -92,8 +144,8 @@ main:
         jal compare_big
         move $a0, $v0
         jal print_int
-        la $a0, compare2a
-        la $a1, compare2b
+        la $a0, compare1b
+        la $a1, compare1a
         jal compare_big
         move $a0, $v0
         jal print_int
@@ -103,11 +155,45 @@ main:
         move $a0, $v0
         jal print_int
      mult_test:
+        la $a0, msg5                             # load "Multiplication Tests"
+        jal print_message
         jal init_big_int
-
-
+        move $a2, $v0                           # return from big int is stack pointer
+        la $a0, number6
+        la $a1, number7
+        jal mult_big                            # three argument
+        move $a0, $v0                           # stack pointer has a word
+        jal print_big
+        move $a2, $v0                           # return from big int is stack pointer
+        jal exit_big_int
+        jal init_big_int
+        move $a2, $v0
+        la $a0, number11
+        la $a1, number12
+        jal mult_big                            # three argument
+        move $a0, $v0                           # stack pointer has a word
+        jal print_big
+        jal exit_big_int
+        jal init_big_int
+        move $a2, $v0
+        la $a0, number9
+        la $a1, number10
+        jal mult_big                            # three argument
+        move $a0, $v0                           # stack pointer has a word
+        jal print_big
         jal exit_big_int
         b end_program
+
+     debug:
+        move $t1, $a0
+        move $t2, $v0
+        la $a0, debug_msg
+        li $v0, 4
+        syscall
+        move $a0, $t1
+        move $v0, $t2
+        #b back
+
 
 ################### is_small_prime ###############
 is_small_prime:
@@ -131,13 +217,14 @@ is_small_prime:
 ################### print_big ###################
 print_big:
      move $t0, $a0                              # get the input b to $t0, need $a0 for syscalls
+     move $t7, $a0
      lw $t1, 0($t0)                             # load the n -- big int struct size
      move $t2, $t1                              # copy the n
-     addi $t2, -1                               # c, subtract one from n
+     #add $t2, $t2, -1                           # c, subtract one from n
      mul $t5, $t1, 4                            # $t5 = number array size
      add $t0, $t0, $t5                          # move pointer(t0) to the bottom of the stack
     print_big.loop:
-        blt $t2, 0, print_big.end               # c < 0 -- the inverse of c >= 0
+        beq $t2, 0, print_big.end               # c < 0 -- the inverse of c >= 0
         lw $t3, ($t0)                           # derefrence the pointer
         move $a0, $t3                           # load the digits[c] into the print
         li $v0, 1                                  # set syscall to print integer, can be done outside loop
@@ -149,7 +236,7 @@ print_big:
         la $a0, newline                         # load adress of new line from .data
         li $v0, 4                               # print string syscall
         syscall                                 # call syscall
-        move $v0, $a0
+        move $v0, $t7
         jr $ra                                  # exit the function
 
 ############### digit_to_big ####################
@@ -172,22 +259,21 @@ compare_big:
     lw   $t2, 0($t0)                           # a.n = $t2
     lw   $t3, 0($t1)                           # b.n = $t2
     blt  $t2, $t3, compare_big.return_neg      # ? a.n < b.n : -1
-    blt  $t3, $t2, compare_big.return_pos      # ? b.n < a.n : 1
+    bgt  $t2, $t3, compare_big.return_pos      # ? b.n < a.n : 1
     move $t4, $t2                              # $t4 = i = a.n/$t2
-    addi $t4, -1                               # i = a.n - 1
-    li   $t5, 4                                # need to get the byte offset
-    mul  $t2, $t2, $t5                         # $t2 =  4 * a.n
+    #addi $t4, -1                               # i = a.n - 1
+    mul  $t2, $t2, 4                           # $t2 =  4 * a.n
     add  $t2, $t0, $t2                         # go to the end of a digits array
-    mul  $t3, $t3, $t5                         # $t3 =  4 * b.n
+    mul  $t3, $t3, 4                           # $t3 =  4 * b.n
     add  $t3, $t1, $t3                         # go to the end of b digits array
     compare_big.loop:
-        bltz $t4, compare_big.return_z         # if i < 0, end the loop
+        beq $t4, 0, compare_big.return_z       # if i == 0, end the loop
         lw $t6, ($t2)                          # load a digit to $t6
         lw $t7, ($t3)                          # load b digit to $t7
-        bgt  $t6, $t7, compare_big.return_pos  # a.digits[i] > b.digits[i] : 1
-        blt  $t6, $t7, compare_big.return_neg  # a.digits[i] < b.digits[i] : -1
-        addi $t2, -4                           # move to next digit in a digits array
-        addi $t3, -4                           # move to next digit in b digits array
+        blt  $t6, $t7, compare_big.return_neg  # a.digits[i] > b.digits[i] : -1
+        blt  $t7, $t6, compare_big.return_pos  # a.digits[i] < b.digits[i] : 1
+        add $t2, $t2, -4                       # move to next digit in a digits array
+        add $t3, $t3, -4                      # move to next digit in b digits array
         addi $t4, -1                           # i--
         b compare_big.loop                     # go to top of loop
     compare_big.return_z:
@@ -199,11 +285,10 @@ compare_big:
     compare_big.return_pos:
         li $v0, 1
         jr $ra
-
 ################ compress ######################
 compress:
-     move $t0, $a0                             # load address
-     move $t6, $a0
+     move $t0, $a0                             # load address from argument
+     move $t6, $a0                             # load again
      lw $t1, 0($t0)                            # get n
      move $t2, $t1                             # copy n to calculate offset
      mul $t5, $t2, 4                           # get offset
@@ -212,8 +297,8 @@ compress:
         blez $t2, compress.return              #
         lw $t4, 0($t0)                         # digits[i] overwritting because we can
         bnez $t4, compress.return              #
-        sub $t0, 4                              # redude the address by one
-        sub $t2, 1                              # n
+        sub $t0, 4                             # redude the address by one
+        sub $t2, 1                             # n
         b compress.loop
     compress.return:
         sw $t2, 0($t6)                         # store the update n value
@@ -244,42 +329,43 @@ shift_right:
 
 ############### shift_left #####################
 shift_left:
-    move $t0, $a0
-    lw $t1, 0($t0)
-    li $t2, 0
-    add $t3, $t0, 4
+    move $t0, $a0                              # load word
+    lw $t1, 0($t0)                             # load i = a.n
+    li $t2, 0                                  # i
+    add $t3, $t0, 4                            # $t3 => digits[0]
     shift_left.loop:
-        beq $t2, $t1, shift_left.return
-        lw $t4, 4($t3)
-        sw $t4, ($t3)
-        add $t2, 1
-        add $t3, 4
-        b shift_left.loop
+        beq $t2, $t1, shift_left.return        # i == a.n
+        lw $t4, 4($t3)                         # $t4 = a.digits[i+1]
+        sw $t4, 0($t3)                         # a.digits[i] = $t4 = a.digits[i+1]
+        add $t2, 1                             # i++
+        add $t3, 4                             # offset
+        b shift_left.loop                      # go to the top again
     shift_left.return:
-        sub $t1, 1
-        sw $t1, 0($t0)
-        move $v0, $t0
+        sub $t1, 1                             # $t1 = a.n - 1
+        sw $t1, 0($t0)                         # a.n = $t1 = a.n - 1
+        move $v0, $t0                          # put a * into reutrn
         jr $ra
 
+############# subroutine: init_big_int ########
 init_big_int:
-    subu $sp, $sp, 1404                     # move the stack pointer down one bigint size
-    move $t0, $sp
+    subu $sp, $sp, 1404                       # move the stack pointer down one bigint size
+    move $t0, $sp                             # store tack pointer in $t0
 
-    li $t1, 0
-    sw $t1, ($t0)
+    li $t1, 350                               # $t1 = 0
+    sw $t1, ($t0)                             # new_big_int.n = 0
 
-    li $t2, 0
+    li $t2, 0                                 # $t2 = 0
 
     init_big_int.loop:
-        beg $t2, $21, init_big_int.return
-        add $t0, 4
-        sw $0, ($t0)
-        add $t2, 1
-        b init_big_int.loop
+        beq $t2, $t1, init_big_int.return     # $t2 = 0 == 350 ? branch to exit
+        add $t0, 4                            # $t0 = pointer to stack
+        sw $zero, ($t0)                       # digits[i] = 0
+        add $t2, 1                            # i++
+        b init_big_int.loop                   # go to the top agian
 
-    init_big_ing.return:
-        move $v0, $sp
-        jr $ra
+    init_big_int.return:
+        move $v0, $sp                         # move stack pointer to return address
+        jr $ra                                # return
 
 
 exit_big_int:
@@ -302,36 +388,36 @@ mult_big:
     sw $s5, 24($sp)
     sw $s6, 28($sp)
     sw $s7, 32($sp)
-
-    move $s0, $a0                           # load a into $s0
-    move $s1, $a1                           # load b into $s1
-    move $s2, $a2                           # load c into $s2, no need to do the loop
+                                            # note big int already initizlied as all 0
+    move $s1, $a0                           # load a into $s1
+    move $s2, $a1                           # load b into $s2
+    move $s0, $a2                           # load c into $s0, no need to do the loop
     lw $s3, 0($s1)                          # load a.n int $s3
-    lw $s4, 0($s1)                          # load b.n int $s4
+    lw $s4, 0($s2)                          # load b.n int $s4
 
     li $s5, 0                               # i = 0
     mult_big.loopOne:
-        beg $s5, $s4, mult_big.loopOneExit
-        li $s6, 0                          # carry = 0
-        move $s7, $s5                      # initilize j
-        move $t9, $s3                      # a.n + i
-        add $t9, $t9, $s5
-        mult_big.loopTwo:
-            beg $s7, $t9, mult_big.loopTwoExit
+        beq $s5, $s4, mult_big.return       # i == b.n
+        li $s6, 0                           # $s6 = carry = 0
+        move $s7, $s5                       # $s6 = j = i =  $s5
+        move $t9, $s3                       # $t9 = a.n
+        add $t9, $t9, $s5                   # $t9 = a.n + i (for break condition)
+        mult_big.inner_loop:
+            beq $s7, $t9, mult_big.break_inner
 
-            move $t0, $s2                  # start of b
-            add $t0, 4                     # move to the b.digits[]
-            mul $t0, $s5, 4                # i * 4
-            add $t0, $t0, $t1              # b.digits[i]
+            move $t0, $s2                   # start of b
+            add $t0, 4                      # move to the b.digits[]
+            mul $t1, $s5, 4                 # i * 4
+            add $t0, $t0, $t1               # b.digits[i]
             lw $t3, ($t0)
 
-            move $t0, $s1                  # start of a
-            add $t0, 4                     # move to the a.digits[]
-            move $t1, $s7                  # j
-            sub $t1, $t1, $s5              # j - i
-            mul $t2, $t1, 4                # (j-1) * 4
-            add $t0, $t0, $t2              # a.digits[j-i]
-            lw $t4, ($t0)                  #
+            move $t0, $s1                   # start of a
+            add $t0, 4                      # move to the a.digits[]
+            move $t1, $s7                   # j
+            sub $t1, $t1, $s5               # j - i
+            mul $t2, $t1, 4                 # (j-1) * 4
+            add $t0, $t0, $t2               # a.digits[j-i]
+            lw $t4, ($t0)                   #
 
             mul $t5, $t3, $t4              # b.digits[i] * a.digits[j-1]
 
@@ -341,40 +427,45 @@ mult_big:
             add $t0, $t0, $t1              # c.digits[j]
             lw $t6, ($t0)
 
-            add $t6, $t6, $t5              # c.digits[j] + b.digits[i] * a.digits[j-1]
-            add $t6, $t6, $s5              # + carry
+            add $t6, $t6, $t5               # c.digits[j] + b.digits[i] * a.digits[j-1]
+            add $t6, $t6, $s6               # += carry **************
 
-            li $t8, 10
-            div $s6, $t6, $t8              # val / 10
-            mfhi $t7
-            sw $t7, 0($t0)                   # c.digits[j] = val % 10
+            li $t8, 10                      # $t8 = 10
+            div $s6, $t6, $t8               # val / 10
+            mfhi $t7                        # mod value to $t7
+            sw $t7, 0($t0)                  # c.digits[j] = val % 10
             add $s7, 1                      # j++
-            b mult_big.loopTwo              # restart loop
-        mult_big.loopTwoExit:
-            beg $s6, 0, mult_big.loopOneExit
-
+            b mult_big.inner_loop           # restart inner loop
+        mult_big.break_inner:
+            beq $s6, 0, mult_big.skip_carry # carry == 0 ** double check this **
             add $t0, $t0, 4                 # j++
+            lw $t1, ($t0)                   # $t1 = c.digits[j]
+            add $t1, $t1, $s6               # $t1 = c.digits[j] + carry
+            li $t8, 10                      # get 10
+            div $s6, $t1, $t8               # val / 10
+            mfhi $t2                        # mod value
+            sw $t2, ($t0)                   # c.digits[j] = mod value $t2
+        mult_big.skip_carry:
+            add $s5, 1                      # i ++
+            b mult_big.loopOne              # go to the top of the i loop
 
 
-        b mult_big.loopOne                     #
+    mult_big.return:
+        move $a0, $s0
+        jal compress
+        move $v0, $s0
+        lw $ra, ($sp)
+        lw $s0, 4($sp)
+        lw $s1, 8($sp)
+        lw $s2, 12($sp)
+        lw $s3, 16($sp)
+        lw $s4, 20($sp)
+        lw $s5, 24($sp)
+        lw $s6, 28($sp)
+        lw $s7, 32($sp)
+        addu $sp, $sp, 36                          # remove the stack frame
+        jr $ra                                     # Do not have to worry about return with init_big_int
 
-    mult_big.loopOneExit:
-
-
-
-    lw $ra, ($sp)
-    lw $s0, 4($sp)
-    lw $s1, 8($sp)
-    lw $s2, 12($sp)
-    lw $s3, 16($sp)
-    lw $s4, 20($sp)
-    lw $s5, 24($sp)
-    lw $s6, 28($sp)
-    lw $s, 32($sp)
-
-    subu $sp, $sp, 36                          # remove the stack frame
-                                               # Do not have to worry about return with init_big_int
-    jr $ra
 
 #pow_big:
 
