@@ -76,19 +76,19 @@ buffer24: .byte 1404
 number16: .word 1 7
 buffer25: .byte 1404
 
-number16: .word 1 3
+number17: .word 1 3
 buffer26: .byte 1404
 
-number17: .word 2 2 4
+number18: .word 2 2 4
 buffer27: .byte 1404
 
-number18: .word 2 2 1
+number19: .word 2 2 1
 buffer28: .byte 1404
 
-number19: .word 10 0 0 0 0 0 0 0 0 0 9
+number20: .word 10 0 0 0 0 0 0 0 0 0 9
 buffer29: .byte 1404
 
-number20: .word 7 1 2 3 4 5 6 7
+number21: .word 7 1 2 3 4 5 6 7
 buffer30: .byte 1404
 ################# Print messages ##################
 newline: .asciiz "\n"
@@ -225,12 +225,24 @@ main:
         move $a0, $v0
         jal print_big
     sub_test:
-        la $a0, msg6                             # load "Small Prime Tests"
+        la $a0, msg7                             # load "Small Prime Tests"
         jal print_message                        # see print message
-
-
+        la $a0, number16
+        la $a1, number17
+        jal sub_big
+        move $a0, $v0
+        jal print_big
+        la $a0, number18
+        la $a1, number19
+        jal sub_big
+        move $a0, $v0
+        jal print_big
+        la $a0, number20
+        la $a1, number21
+        jal sub_big
+        move $a0, $v0
+        jal print_big
         b end_program
-
      debug:
         move $t1, $a0
         move $t2, $v0
