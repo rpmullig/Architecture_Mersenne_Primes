@@ -777,6 +777,7 @@ sub_big:
     jal copy_big_init                           # create a copy of a via th stack
 
 
+    jal exit_big_int
 
     lw $ra, ($sp)
     lw $s0, 4($sp)
