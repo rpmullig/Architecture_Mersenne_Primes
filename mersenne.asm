@@ -773,10 +773,22 @@ sub_big:
 
     move $t0, $a0
     move $t1, $a1
+    lw $t5, ($a0)                               # a.n
 
     jal copy_big_init                           # create a copy of a via th stack
+    move $s1, $v0                               # $S1 = c
+    li $t2, 1                                   # k = 0
+    li $t3, 1                                   # i = 0
+    li $t4, 4                                   # i offet
+    sub_big.loop:
+        beq $t2, $t5, sub_big.return
 
+        add $t2, $t2, 1                         # i++
+        b sub_big.loop
+    sub_big.return:
 
+    move $a0, $s1
+    jal compress
     jal exit_big_int
 
     lw $ra, ($sp)
