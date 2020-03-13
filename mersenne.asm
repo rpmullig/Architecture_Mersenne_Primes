@@ -63,14 +63,25 @@ buffer20: .byte 1404
 
 number10: .word 7 0 0 0 0 0 0 9
 buffer21: .byte 1404
+
+number13: .word 1 3
+buffer22: .byte 1404
+
+number14: .word 1 3
+buffer23: .byte 1404
+
+number15: .word 2 2 4
+buffer24: .byte 1404
 ################# Print messages ##################
 newline: .asciiz "\n"
 msg:  .asciiz "Small Prime Tests"
 msg1: .asciiz "Compare Tests"
-msg2: .asciiz "Compress Test"
-msg3: .asciiz "Shift Right Test"
-msg4: .asciiz "Shift Left Test"
-msg5: .asciiz "Multiplication Test"
+msg2: .asciiz "Compress Tests"
+msg3: .asciiz "Shift Right Tests"
+msg4: .asciiz "Shift Left Tests"
+msg5: .asciiz "Multiplication Tests"
+msg6: .asciiz "Power Tests"
+msg7: .asciiz "Subtraction Tests"
 debug_msg: .asciiz "Debug\n"
 ###################################################
 #        -----------TEXT-----------               #
@@ -78,7 +89,7 @@ debug_msg: .asciiz "Debug\n"
     .text
 ##################### Main ########################
 main:
-    b small_prime_test_run                    # run the small prime tests
+    b small_prime_test_run                      # run the small prime tests
     b end_program
     end_program:
         li $v0, 10
@@ -182,13 +193,31 @@ main:
         move $a0, $v0                           # stack pointer has a word
         jal print_big
         jal exit_big_int
+    pow_test:
+        la $a0, msg6                             # load "Small Prime Tests"
+        jal print_message                        # see print message
+        la $a0, number14                         # a = Bigint 4
+        li $a1, 4
+        jal pow_big
+        move $a0, $v0
+        jal print_big
+        la $a0, number15                         # a = Bigint 4
+        li $a1, 42
+        jal pow_big
+        move $a0, $v0
+        jal print_big
+    sub_test:
+        la $a0, msg6                             # load "Small Prime Tests"
+        jal print_message                        # see print message
+
+
         b end_program
 
      debug:
         move $t1, $a0
         move $t2, $v0
         la $a0, debug_msg
-        li $v0, 4
+        li $v0, 6
         syscall
         move $a0, $t1
         move $v0, $t2
@@ -288,6 +317,27 @@ compare_big:
 
 ################ compress ######################
 compress:
+
+     subu $sp, $sp, 68                       # push the stack frame
+     sw $ra, ($sp)
+     sw $s0, 4($sp)
+     sw $s1, 8($sp)
+     sw $s2, 12($sp)
+     sw $s3, 16($sp)
+     sw $s4, 20($sp)
+     sw $s5, 24($sp)
+     sw $s6, 28($sp)
+     sw $s7, 32($sp)
+     sw $t0, 36($sp)
+     sw $t1, 40($sp)
+     sw $t2, 44($sp)
+     sw $t3, 48($sp)
+     sw $t4, 52($sp)
+     sw $t5, 56($sp)
+     sw $t6, 60($sp)
+     sw $t7, 64($sp)
+
+
      move $t0, $a0                             # load address from argument
      move $t6, $a0                             # load again
      lw $t1, 0($t0)                            # get n
@@ -295,7 +345,7 @@ compress:
      mul $t5, $t2, 4                           # get offset
      add $t0, $t0, $t5                         #
     compress.loop:
-        blez $t2, compress.return              #
+        blt $t2, 1, compress.return            # *******CHECK THIS!!! **********
         lw $t4, 0($t0)                         # digits[i] overwritting because we can
         bnez $t4, compress.return              #
         sub $t0, 4                             # redude the address by one
@@ -304,6 +354,26 @@ compress:
     compress.return:
         sw $t2, 0($t6)                         # store the update n value
         move $v0, $t6
+
+        lw $ra, ($sp)
+        lw $s0, 4($sp)
+        lw $s1, 8($sp)
+        lw $s2, 12($sp)
+        lw $s3, 16($sp)
+        lw $s4, 20($sp)
+        lw $s5, 24($sp)
+        lw $s6, 28($sp)
+        lw $s7, 32($sp)
+        lw $t0, 36($sp)
+        lw $t1, 40($sp)
+        lw $t2, 44($sp)
+        lw $t3, 48($sp)
+        lw $t4, 52($sp)
+        lw $t5, 56($sp)
+        lw $t6, 60($sp)
+        lw $t7, 64($sp)
+        addu $sp, $sp, 68                         # remove the stack frame
+
         jr $ra
 
 ############### shift_right ####################
@@ -350,36 +420,8 @@ shift_left:
 ############# subroutine: init_big_int ########
 init_big_int:
     subu $sp, $sp, 1404                       # move the stack pointer down one bigint size
-    move $t0, $sp                             # store tack pointer in $t0
 
-    li $t1, 350                               # $t1 = 0
-    sw $t1, ($t0)                             # new_big_int.n = 0
-
-    li $t2, 0                                 # $t2 = 0
-
-    init_big_int.loop:
-        beq $t2, $t1, init_big_int.return     # $t2 = 0 == 350 ? branch to exit
-        add $t0, 4                            # $t0 = pointer to stack
-        sw $zero, ($t0)                       # digits[i] = 0
-        add $t2, 1                            # i++
-        b init_big_int.loop                   # go to the top agian
-
-    init_big_int.return:
-        move $v0, $sp                         # move stack pointer to return address
-        jr $ra                                # return
-
-
-exit_big_int:
-    addu $sp, $sp, 1404
-    jr $ra
-
-copy_big_init:
-    # to do for pow_big
-
-
-############### mult_big #####################
-mult_big:
-    subu $sp, $sp, 36                       # push the stack frame
+    subu $sp, $sp, 68                       # push the stack frame
     sw $ra, ($sp)
     sw $s0, 4($sp)
     sw $s1, 8($sp)
@@ -389,6 +431,125 @@ mult_big:
     sw $s5, 24($sp)
     sw $s6, 28($sp)
     sw $s7, 32($sp)
+    sw $t0, 36($sp)
+    sw $t1, 40($sp)
+    sw $t2, 44($sp)
+    sw $t3, 48($sp)
+    sw $t4, 52($sp)
+    sw $t5, 56($sp)
+    sw $t6, 60($sp)
+    sw $t7, 64($sp)
+
+    move $t0, $sp                             # store stack pointer in $t0
+    addu $t0, $t0, 68
+
+    li $t1, 350                               # $t1 = 0
+    sw $t1, ($t0)                             # new_big_int.n = 350
+
+    li $t2, 0                                 # $t2 = 0
+
+    init_big_int.loop:
+        beq $t2, $t1, init_big_int.return     # $t2 = 0 == 350 ? branch to exit
+        add $t0, 4                            # $t0 = pointer to stack
+        sw $zero, ($t0)                       # digits[i] = 0
+        add $t2, 1                            # i++
+        b init_big_int.loop                   # go to the top agian
+    init_big_int.return:
+       lw $ra, ($sp)
+       lw $s0, 4($sp)
+       lw $s1, 8($sp)
+       lw $s2, 12($sp)
+       lw $s3, 16($sp)
+       lw $s4, 20($sp)
+       lw $s5, 24($sp)
+       lw $s6, 28($sp)
+       lw $s7, 32($sp)
+       lw $t0, 36($sp)
+       lw $t1, 40($sp)
+       lw $t2, 44($sp)
+       lw $t3, 48($sp)
+       lw $t4, 52($sp)
+       lw $t5, 56($sp)
+       lw $t6, 60($sp)
+       lw $t7, 64($sp)
+       addu $sp, $sp, 68                         # remove the stack frame
+
+        move $v0, $sp                            # move stack pointer to return address
+        jr $ra                                   # return
+
+
+exit_big_int:
+    addu $sp, $sp, 1404
+    jr $ra
+
+copy_big_init:
+        subu $sp, $sp, 1404                      # move the stack pointer down one bigint size
+        subu $sp, $sp, 36                        # push the stack frame
+        sw $ra, ($sp)
+        sw $s0, 4($sp)
+        sw $s1, 8($sp)
+        sw $s2, 12($sp)
+        sw $s3, 16($sp)
+        sw $s4, 20($sp)
+        sw $s5, 24($sp)
+        sw $s6, 28($sp)
+        sw $s7, 32($sp)
+
+        move $s0, $a0                           # $s0 = a (copy from this variable)
+        lw $s1, 0($s0)                          # $s1 = a.n
+
+        move $s2, $sp                           # $s2 = b (the variable copying the values to)
+        addu $s2, $s2, 36                       # offet add to get back to stack pointer
+
+        sw $s1, 0($s2)                          # b.n = a.n
+        move $s3, $s1                           # i = a.n
+        mul $s1, $s1, 4                         # a.n * 4
+        add $s0, $s0, $s1                       # $s0 = the end of the a array
+        add $s2, $s2, $s1                       # $s2 = end of the b array
+        copy_big_init.loop:
+            beq $s3, 0, copy_big_init.return    # i == 0, break (decrementing)
+            lw $s4, ($s0)                       # $s4 = a.digits[i]
+            sw $s4, 0($s2)                      # b.digits[i] = $s4 = a.digits[i]
+            sub $s3, $s3, 1                     # i--
+            sub $s2, $s2, 4                     # next b.digit
+            sub $s0, $s0, 4                     # next a.digit
+            b copy_big_init.loop                # go to top of loop
+        copy_big_init.return:
+            lw $ra, ($sp)
+            lw $s0, 4($sp)
+            lw $s1, 8($sp)
+            lw $s2, 12($sp)
+            lw $s3, 16($sp)
+            lw $s4, 20($sp)
+            lw $s5, 24($sp)
+            lw $s6, 28($sp)
+            lw $s7, 32($sp)
+            addu $sp, $sp, 36               # remove the stack frame (36*4)
+            move $v0, $sp                    # return b
+            jr $ra
+
+
+############### mult_big #####################
+mult_big:
+    subu $sp, $sp, 68                       # push the stack frame
+    sw $ra, ($sp)
+    sw $s0, 4($sp)
+    sw $s1, 8($sp)
+    sw $s2, 12($sp)
+    sw $s3, 16($sp)
+    sw $s4, 20($sp)
+    sw $s5, 24($sp)
+    sw $s6, 28($sp)
+    sw $s7, 32($sp)
+    sw $t0, 36($sp)
+    sw $t1, 40($sp)
+    sw $t2, 44($sp)
+    sw $t3, 48($sp)
+    sw $t4, 52($sp)
+    sw $t5, 56($sp)
+    sw $t6, 60($sp)
+    sw $t7, 64($sp)
+
                                             # note big int already initizlied as all 0
     move $s1, $a0                           # load a into $s1
     move $s2, $a1                           # load b into $s2
@@ -455,6 +616,7 @@ mult_big:
         move $a0, $s0
         jal compress
         move $v0, $s0
+
         lw $ra, ($sp)
         lw $s0, 4($sp)
         lw $s1, 8($sp)
@@ -464,17 +626,102 @@ mult_big:
         lw $s5, 24($sp)
         lw $s6, 28($sp)
         lw $s7, 32($sp)
-        addu $sp, $sp, 36                          # remove the stack frame
+        lw $t0, 36($sp)
+        lw $t1, 40($sp)
+        lw $t2, 44($sp)
+        lw $t3, 48($sp)
+        lw $t4, 52($sp)
+        lw $t5, 56($sp)
+        lw $t6, 60($sp)
+        lw $t7, 64($sp)
+        addu $sp, $sp, 68                          # remove the stack frame
         jr $ra                                     # Do not have to worry about return with init_big_int
 
 
 ############### pow_big #####################
 pow_big:
+    subu $sp, $sp, 68                       # push the stack frame
+    sw $ra, ($sp)
+    sw $s0, 4($sp)
+    sw $s1, 8($sp)
+    sw $s2, 12($sp)
+    sw $s3, 16($sp)
+    sw $s4, 20($sp)
+    sw $s5, 24($sp)
+    sw $s6, 28($sp)
+    sw $s7, 32($sp)
+    sw $t0, 36($sp)
+    sw $t1, 40($sp)
+    sw $t2, 44($sp)
+    sw $t3, 48($sp)
+    sw $t4, 52($sp)
+    sw $t5, 56($sp)
+    sw $t6, 60($sp)
+    sw $t7, 64($sp)
 
+    move $t1, $a1                               # $t1 = p
+    move $t0, $a0                               # $t0 = Bigint a
+    jal copy_big_init                           # create a copy b from stack
+    move $t2, $v0                               # $t2 = b
+    li $t3, 1                                   # i
 
+    pow_big.loop:
+        beq $t3, $t1, pow_big.return            # break and return
+
+        jal init_big_int                        # add a varaible on stack
+        move $t4, $v0                           # $t4 = c = new variable on stack
+        move $a2, $t4                           # put c into arg register for mult
+        move $a0, $t0                           # put a into arg register for mult
+        move $a1, $t2                           # put b into arg register for mult
+        jal mult_big                            # run mult
+        move $t4, $v0                           # result
+        lw $t5, 0($t4)                          # i = a.n
+        sw $t5, 0($t2)                          # b = a.n
+        mul $t6, $t5, 4                         # turn into byte offset
+        add $t4, $t4, $t6                       # add offset byte offset for index
+        add $t2, $t2, $t6                       # add offset byte offset for index
+        copy:
+            beq $t5, 0, end_copy                #
+            lw $t7, ($t4)                       #
+            sw $t7, ($t2)                       #
+            sub $t4, 4                          #
+            sub $t2, 4                          #
+            sub $t5, 1                          #
+            b copy                              # go to top
+        end_copy:
+        jal exit_big_int                        # remove result from stack
+        add $t3, $t3, 1                         # i++
+
+        b pow_big.loop                          # go to the top
+    pow_big.return:
+
+        jal exit_big_int                        # remoe the new variable b from the stack
+
+        move $v0, $t2                           # return b
+
+        lw $ra, ($sp)
+        lw $s0, 4($sp)
+        lw $s1, 8($sp)
+        lw $s2, 12($sp)
+        lw $s3, 16($sp)
+        lw $s4, 20($sp)
+        lw $s5, 24($sp)
+        lw $s6, 28($sp)
+        lw $s7, 32($sp)
+        lw $t0, 36($sp)
+        lw $t1, 40($sp)
+        lw $t2, 44($sp)
+        lw $t3, 48($sp)
+        lw $t4, 52($sp)
+        lw $t5, 56($sp)
+        lw $t6, 60($sp)
+        lw $t7, 64($sp)
+        addu $sp, $sp, 68                          # remove the stack frame
+
+        jr $ra
 
 ############### sub_big #####################
-#sub_big:
+sub_big:
 
 
 ############### mod_big #####################
