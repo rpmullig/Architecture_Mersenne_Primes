@@ -242,6 +242,8 @@ main:
         jal sub_big
         move $a0, $v0
         jal print_big
+    mod:
+
         b end_program
      debug:
         move $t1, $a0
@@ -771,24 +773,54 @@ sub_big:
     sw $t6, 60($sp)
     sw $t7, 64($sp)
 
-    move $t0, $a0
-    move $t1, $a1
-    lw $t5, ($a0)                               # a.n
+    move $t0, $a0                               # $t0 = a
+    move $t1, $a1                               # $t1 = b
+    lw $t5, ($t0)                               # a.n
+    lw $t3, ($t1)                               # b.n
 
-    jal copy_big_init                           # create a copy of a via th stack
-    move $s1, $v0                               # $S1 = c
-    li $t2, 1                                   # k = 0
-    li $t3, 1                                   # i = 0
-    li $t4, 4                                   # i offet
+    mul $t4, $t3, 4
+    add $t7, $t4, $t1
+    add $t7, $t7, 4
+    sub_big.match_length:
+        beq $t5, $t3, sub_big.math_length_end
+        sw $zero, ($t7)
+        add $t7, $t7, 4
+        add $t3, $t3, 1
+        b sub_big.math_length
+    sub_big.match_length_end:
+
+    jal copy_big_init                           # create a copy of a via the stack
+    move $s1, $v0                               # $s1 = c
+    move $s0, $v0                               #
+    li $t2, 0                                   # i = 0
+    add $s1, $s1, 4                             # i offet for c.digits[i]
+    add $t1, $t1, 4                             # i offet for b.digits[i]
     sub_big.loop:
-        beq $t2, $t5, sub_big.return
-
+        beq $t2, $t5, sub_big.return            # while(i < a.n)
+        lw $s3, ($s1)                           # $s3 = c.digits[i]
+        lw $s4, ($t1)                           # $s4 = b.digits[i]
+        sub $t7, $s3, $s4                       # k = c.digits[i] - b.digits[i]
+        sub_big.if:
+            bltz $t7, sub_big.else              # $t7/k < 0, go to else
+            sw $t7, ($s1)                       #
+            b sub_big.end_if                    #
+        sub_big.else:
+            lw $t4, 4($s1)                      # c.digits[i+1]
+            sub $t4, $t4, 1                     # c.digits[i+1] - 1
+            sw $t4, 4($s1)
+            add $t7, $t7, 10
+            sw $t7, ($s1)
+            b sub_big.end_if
+        sub_big.end_if:
+        add $t1, $t1, 4                         # i offet for b.digits[i]
+        add $s1, $s1, 4                         # i offet for c.digits[i]
         add $t2, $t2, 1                         # i++
         b sub_big.loop
     sub_big.return:
 
-    move $a0, $s1
+    move $a0, $s0
     jal compress
+    move $a0, $v0
     jal exit_big_int
 
     lw $ra, ($sp)
@@ -813,7 +845,7 @@ sub_big:
     jr $ra
 
 ############### mod_big #####################
-#mod_big:
+mod_big:
 
 
 ############### LLT #####################
