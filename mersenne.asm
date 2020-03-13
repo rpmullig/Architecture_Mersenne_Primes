@@ -72,6 +72,24 @@ buffer23: .byte 1404
 
 number15: .word 2 2 4
 buffer24: .byte 1404
+
+number16: .word 1 7
+buffer25: .byte 1404
+
+number16: .word 1 3
+buffer26: .byte 1404
+
+number17: .word 2 2 4
+buffer27: .byte 1404
+
+number18: .word 2 2 1
+buffer28: .byte 1404
+
+number19: .word 10 0 0 0 0 0 0 0 0 0 9
+buffer29: .byte 1404
+
+number20: .word 7 1 2 3 4 5 6 7
+buffer30: .byte 1404
 ################# Print messages ##################
 newline: .asciiz "\n"
 msg:  .asciiz "Small Prime Tests"
@@ -722,7 +740,52 @@ pow_big:
 
 ############### sub_big #####################
 sub_big:
+    subu $sp, $sp, 68                       # push the stack frame
+    sw $ra, ($sp)
+    sw $s0, 4($sp)
+    sw $s1, 8($sp)
+    sw $s2, 12($sp)
+    sw $s3, 16($sp)
+    sw $s4, 20($sp)
+    sw $s5, 24($sp)
+    sw $s6, 28($sp)
+    sw $s7, 32($sp)
+    sw $t0, 36($sp)
+    sw $t1, 40($sp)
+    sw $t2, 44($sp)
+    sw $t3, 48($sp)
+    sw $t4, 52($sp)
+    sw $t5, 56($sp)
+    sw $t6, 60($sp)
+    sw $t7, 64($sp)
 
+    move $t0, $a0
+    move $t1, $a1
+
+    jal copy_big_init                           # create a copy of a via th stack
+
+
+
+    lw $ra, ($sp)
+    lw $s0, 4($sp)
+    lw $s1, 8($sp)
+    lw $s2, 12($sp)
+    lw $s3, 16($sp)
+    lw $s4, 20($sp)
+    lw $s5, 24($sp)
+    lw $s6, 28($sp)
+    lw $s7, 32($sp)
+    lw $t0, 36($sp)
+    lw $t1, 40($sp)
+    lw $t2, 44($sp)
+    lw $t3, 48($sp)
+    lw $t4, 52($sp)
+    lw $t5, 56($sp)
+    lw $t6, 60($sp)
+    lw $t7, 64($sp)
+    addu $sp, $sp, 68                          # remove the stack frame
+
+    jr $ra
 
 ############### mod_big #####################
 #mod_big:
